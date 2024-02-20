@@ -1,14 +1,48 @@
 import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { RadioInput } from "./RadioInput";
 import { TextInput } from "./TextInput";
 import { Button } from "./Button";
+import { useEffect } from "react";
+import { SchemaType, bookingSchema } from "../schema/bookingform";
+
+const getDefaultValues = () => {
+  try {
+    return bookingSchema.parse({});
+  } catch (e) {
+    return {
+      trip: "one-way",
+      "departure-date": new Date().toISOString().slice(0, 10),
+    } satisfies SchemaType;
+  }
+};
 
 export const BookingForm = () => {
-  const form = useForm();
+  const form = useForm<SchemaType>({
+    defaultValues: getDefaultValues(),
+    resolver: zodResolver(bookingSchema),
+  });
+  const trip = form.watch("trip");
+
+  useEffect(() => {
+    if (trip === "one-way") {
+      form.resetField("return-date", {});
+    }
+  }, [form, trip]);
+
   return (
     <FormProvider {...form}>
-      <form className="flex flex-col items-stretch gap-y-2">
-        <div className="flex gap-x-4">
+      <form
+        className="flex flex-col items-stretch gap-y-2 min-w-72"
+        onSubmit={form.handleSubmit(
+          (data) => console.log("", data),
+          (errors) => {
+            console.log("errors", errors);
+          },
+        )}
+      >
+        <div className="flex justify-center gap-x-4">
           <RadioInput
             value="one-way"
             label="Enkelresa"
@@ -16,12 +50,21 @@ export const BookingForm = () => {
           />
           <RadioInput
             value="round-trip"
-            label="Tur-retur"
+            label="Tur & retur"
             control={{ name: "trip" }}
           />
         </div>
-        <TextInput control={{ name: "departure-date" }} />
-        <TextInput control={{ name: "return-date" }} />
+        <TextInput
+          label="Avresedatum"
+          control={{ name: "departure-date" }}
+          placeholder="YYYY-MM-DD"
+        />
+        <TextInput
+          label="Hemresedatum"
+          control={{ name: "return-date", defaultValue: "" }}
+          placeholder="YYYY-MM-DD"
+          disabled={trip === "one-way"}
+        />
         <Button type="submit" className="mt-4">
           Sök resa
         </Button>
