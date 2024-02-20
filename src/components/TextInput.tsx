@@ -22,9 +22,10 @@ export const TextInput = ({
   control,
   ...props
 }: TextInputProps) => {
-  const { fieldState } = useController(control);
+  const { field, fieldState } = useController(control);
+
   return (
-    <div>
+    <div className="flex flex-col items-start">
       <label
         htmlFor={props.id}
         className={twMerge(
@@ -48,6 +49,7 @@ export const TextInput = ({
         readOnly={props.disabled}
         required={Boolean(control.rules?.required)}
         {...props}
+        {...field}
       />
       {fieldState.error ? (
         <p className="mt-2 text-sm text-red-600 dark:text-red-500">
